@@ -43,7 +43,9 @@ static void deinit_decoder() {
 static AUDIO_DEV AoDev = 0;
 static AO_CHN AoChn = 0;
 static ADEC_CHN AdChn = 0;
+
 #define SAMPLE_AUDIO_PTNUMPERFRM 320
+#define MP3_SAMPLE (SAMPLE_AUDIO_PTNUMPERFRM * sizeof(short))
 
 static HI_S32 AUDIO_AoBindAdec(AUDIO_DEV AoDev, AO_CHN AoChn, ADEC_CHN AdChn) {
   MPP_CHN_S stSrcChn, stDestChn;
@@ -87,9 +89,11 @@ static void init_hw() {
       .enI2sType = AIO_I2STYPE_INNERCODEC,
   };
   ret = HI_MPI_AO_SetPubAttr(AoDev, &stAioAttr);
+#if 0
   if (ret != HI_SUCCESS) {
     printf("error %s\n", hi_errstr(ret));
   }
+#endif
 
   ret = HI_MPI_AO_Enable(AoDev);
   if (ret != HI_SUCCESS) {
@@ -110,7 +114,6 @@ static void init_hw() {
   if (ret != HI_SUCCESS) {
     printf("error %s\n", hi_errstr(ret));
   }
-  printf("bind adec:%d to ao(%d,%d) ok \n", AdChn, AoDev, AoChn);
 }
 
 static void deinit_hw() {}
@@ -119,14 +122,11 @@ int main() {
   init_decoder();
   init_hw();
 
-  FILE *f = fopen("pet-shop-boys-go-west.mp3", "rb");
-  assert(f);
+  FILE *f = stdin;
 
   unsigned char mp3buf[4096];
   short pcm_l[0x10000], pcm_r[0x10000];
   int nread;
-
-  fseek(f, 0x00001f00, SEEK_SET);
 
   while ((nread = fread(mp3buf, 1, sizeof(mp3buf), f))) {
 
@@ -135,8 +135,9 @@ int main() {
     unsigned char *end = sptr + samples * sizeof(short);
     while (sptr < end) {
       int len = end - sptr;
-      if (len > 640)
-        len = 640;
+      if (len > MP3_SAMPLE)
+        len = MP3_SAMPLE;
+
       AUDIO_STREAM_S stAudioStream = {
           .pStream = sptr,
           .u32Len = len,
@@ -153,8 +154,6 @@ int main() {
       sptr += len;
     }
   }
-
-  fclose(f);
 
   deinit_hw();
   deinit_decoder();
