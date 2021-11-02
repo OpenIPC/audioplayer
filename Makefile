@@ -4,6 +4,6 @@ CFLAGS=-I$(MAJ)/lib/liblame.hi3516ev300/include -I$(MAJ)/thirdparty/nda/hi3516ev
 LDFLAGS=-L$(MAJ)/lib/liblame.hi3516ev300/lib -L$(MAJ)/thirdparty/nda/hi3516ev300/lib
 LDLIBS=-lmp3lame -lmpi -lsecurec -lupvqe -ldnvqe -lVoiceEngine
 
-player: player.o errors.o
+audioplayer: player.o errors.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 	sudo cp $@ /mnt/noc/sdk
